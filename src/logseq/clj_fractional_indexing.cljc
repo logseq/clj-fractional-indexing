@@ -30,9 +30,9 @@
   (when-not (= (count int) (get-integer-length (first int)))
     (throw (ex-info (str "invalid integer part of order key: " int) {:int int}))))
 
-(defn- safe-subs
+(defn- str-slice
   ([s i]
-   (safe-subs s i (count s)))
+   (str-slice s i (count s)))
   ([s start end]
    (if (and s
             (>= (count s) start)
@@ -46,14 +46,14 @@
   (let [integer-part-length (get-integer-length (first key))]
     (when (> integer-part-length (count key))
       (throw (ex-info (str "invalid order key: " key) {:key key})))
-    (safe-subs key 0 integer-part-length)))
+    (str-slice key 0 integer-part-length)))
 
 (defn validate-order-key
   [key digits]
-  (when (= key (str "A" (repeat 26 (first digits))))
+  (when (= key (str "A" (apply str (repeat 26 (first digits)))))
     (throw (ex-info (str "invalid order key: " key) {:key key})))
   (let [i (get-integer-part key)
-        f (safe-subs key (count i))]
+        f (str-slice key (count i))]
     (when (= (last f) (first digits))
       (throw (ex-info (str "invalid order key: " key) {:key key})))))
 
@@ -110,7 +110,6 @@
 
 (defn midpoint
   [a b digits]
-  ;; (prn :debug :a a :b b)
   (let [zero (first digits)]
     (when (and b (>= (compare a b) 0))
       (throw (ex-info (str a " >= " b) {:a a :b b})))
@@ -118,9 +117,8 @@
       (throw (ex-info " trailing zero" {:a a :b b})))
     (let [n (when b
               (first (keep-indexed (fn [i _c] (when-not (= (nth a i zero) (nth b i)) i)) b)))]
-      ;; (prn :debug :n n)
       (if (and n (> n 0))
-        (str (subs b 0 n) (midpoint (safe-subs a n) (safe-subs b n) digits))
+        (str (str-slice b 0 n) (midpoint (str-slice a n) (str-slice b n) digits))
         (let [digit-a (if (seq a) (.indexOf digits (str (first a))) 0)
               digit-b (if b (.indexOf digits (str (first b))) (count digits))]
           ;; (prn :debug
@@ -129,8 +127,8 @@
           (if (> (- digit-b digit-a) 1)
             (str (nth digits (int (Math/round (* 0.5 (+ digit-a digit-b))))))
             (if (and (seq b) (> (count b) 1))
-              (subs b 0 1)
-              (str (nth digits digit-a) (midpoint (safe-subs a 1) nil digits)))))))))
+              (str-slice b 0 1)
+              (str (nth digits digit-a) (midpoint (str-slice a 1) nil digits)))))))))
 
 (defn generate-key-between
   [a b & {:keys [digits]
@@ -144,7 +142,7 @@
     (nil? a) (if (nil? b)
                (str "a" (first digits))
                (let [ib (get-integer-part b)
-                     fb (safe-subs b (count ib))]
+                     fb (str-slice b (count ib))]
                  (if (= ib (str "A" (apply str (repeat 26 (first digits)))))
                    (str ib (midpoint "" fb digits))
                    (if (< (compare ib b) 0)
@@ -156,15 +154,15 @@
                                                                       :ib ib}))
                          res))))))
     (nil? b) (let [ia (get-integer-part a)
-                   fa (safe-subs a (count ia))
+                   fa (str-slice a (count ia))
                    i (increment-integer ia digits)]
                (if (nil? i)
                  (str ia (midpoint fa nil digits))
                  i))
     :else (let [ia (get-integer-part a)
-                fa (safe-subs a (count ia))
+                fa (str-slice a (count ia))
                 ib (get-integer-part b)
-                fb (safe-subs b (count ib))]
+                fb (str-slice b (count ib))]
             ;; (prn :debug :ia ia :ib ib :fa fa :fb fb :b b)
             (if (= ia ib)
               (str ia (midpoint fa fb digits))
@@ -182,7 +180,7 @@
   ;; (prn :debug :generate-n-keys-between :a a :b b :n n)
   (let [result (cond
                  (= n 0) []
-                 (= n 1) [(generate-key-between a b digits)]
+                 (= n 1) [(generate-key-between a b {:digits digits})]
                  (nil? b) (reduce
                            (fn [col _]
                              (let [k (generate-key-between (or (last col) a) b {:digits digits})]
@@ -199,9 +197,9 @@
                            (reverse)
                            (vec))
                  :else (let [mid (int (Math/floor (/ n 2)))
-                             c (generate-key-between a b digits)]
+                             c (generate-key-between a b {:digits digits})]
                          (concat
-                          (generate-n-keys-between a c mid digits)
+                          (generate-n-keys-between a c mid {:digits digits})
                           [c]
-                          (generate-n-keys-between c b mid digits))))]
+                          (generate-n-keys-between c b (- n mid 1) {:digits digits}))))]
     (vec (take n result))))
