@@ -19,7 +19,7 @@ This is a Clojure port of the original JavaScript implementation https://github.
 ;; "a0V"
 
 ;; Generate multiple keys
-
+;; ["a0G" "a0V" "a0l"]
 ```
 
 ## License
