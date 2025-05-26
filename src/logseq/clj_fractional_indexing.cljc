@@ -89,24 +89,27 @@
   [x digits]
   (validate-integer x)
   (let [[head & digs] (seq x)
-        [borrow digs] (reduce
-                       (fn [[_ digs] dig]
-                         (let [d (dec (.indexOf digits (str dig)))]
-                           (if (= d -1)
-                             [true (conj digs (last digits))]
-                             [false (conj digs (nth digits d))])))
-                       [true []]
-                       (reverse digs))]
+        [borrow new-digs] (reduce
+                           (fn [[borrow? acc] dig]
+                             (if (not borrow?)
+                               [false (conj acc dig)]
+                               (let [d (dec (.indexOf digits (str dig)))]
+                                 (if (= d -1)
+                                   [true (conj acc (last digits))]
+                                   [false (conj acc (nth digits d))]))))
+                           [true []]
+                           (reverse digs))
+        new-digs (reverse new-digs)]
     (if borrow
       (cond
         (= head \a) (str "Z" (last digits))
         (= head \A) nil
         :else (let [h (char (- (char->int head) 1))
-                    digs (if (< (compare h \Z) 0)
-                           (conj digs (last digits))
-                           (pop digs))]
-                (str h (apply str digs))))
-      (str head (apply str digs)))))
+                    new-digs (if (< (compare h \Z) 0)
+                               (conj new-digs (last digits))
+                               (pop new-digs))]
+                (str h (apply str new-digs))))
+      (str head (apply str new-digs)))))
 
 (defn midpoint
   [a b digits]
@@ -138,39 +141,46 @@
   (when b (validate-order-key b digits))
   (when (and a b (>= (compare a b) 0))
     (throw (ex-info (str a " >= " b) {:a a :b b})))
-  (cond
-    (nil? a) (if (nil? b)
-               (str "a" (first digits))
-               (let [ib (get-integer-part b)
-                     fb (str-slice b (count ib))]
-                 (if (= ib (str "A" (apply str (repeat 26 (first digits)))))
-                   (str ib (midpoint "" fb digits))
-                   (if (< (compare (str ib) b) 0)
-                     (str ib (midpoint "" fb digits))
-                     (let [res (decrement-integer ib digits)]
-                       (if (nil? res)
-                         (throw (ex-info "cannot decrement any more" {:a a :b b :ib ib}))
-                         res))))))
-    (nil? b) (let [ia (get-integer-part a)
-                   fa (str-slice a (count ia))
-                   i (increment-integer ia digits)]
-               (if (nil? i)
-                 (str ia (midpoint fa nil digits))
-                 i))
-    :else (let [ia (get-integer-part a)
-                fa (str-slice a (count ia))
-                ib (get-integer-part b)
-                fb (str-slice b (count ib))]
-            ;; (prn :debug :ia ia :ib ib :fa fa :fb fb :b b)
-            (if (= ia ib)
-              (str ia (midpoint fa fb digits))
-              (let [i (increment-integer ia digits)]
-                ;; (prn :debug :i i :fa fa)
-                (if (nil? i)
-                  (throw (ex-info "cannot increment any more" {:a a
-                                                               :b b
-                                                               :ia ia}))
-                  (if (< (compare i b) 0) i (str ia (midpoint fa nil digits)))))))))
+  (let [result (cond
+                 (nil? a) (if (nil? b)
+                            (str "a" (first digits))
+                            (let [ib (get-integer-part b)
+                                  fb (str-slice b (count ib))]
+                              (if (= ib (str "A" (apply str (repeat 26 (first digits)))))
+                                (str ib (midpoint "" fb digits))
+                                (if (< (compare (str ib) b) 0)
+                                  (str ib (midpoint "" fb digits))
+                                  (let [res (decrement-integer ib digits)]
+                                    (if (nil? res)
+                                      (throw (ex-info "cannot decrement any more" {:a a :b b :ib ib}))
+                                      res))))))
+                 (nil? b) (let [ia (get-integer-part a)
+                                fa (str-slice a (count ia))
+                                i (increment-integer ia digits)]
+                            (if (nil? i)
+                              (str ia (midpoint fa nil digits))
+                              i))
+                 :else (let [ia (get-integer-part a)
+                             fa (str-slice a (count ia))
+                             ib (get-integer-part b)
+                             fb (str-slice b (count ib))]
+                         ;; (prn :debug :ia ia :ib ib :fa fa :fb fb :b b)
+                         (if (= ia ib)
+                           (str ia (midpoint fa fb digits))
+                           (let [i (increment-integer ia digits)]
+                             ;; (prn :debug :i i :fa fa)
+                             (if (nil? i)
+                               (throw (ex-info "cannot increment any more" {:a a
+                                                                            :b b
+                                                                            :ia ia}))
+                               (if (< (compare i b) 0) i (str ia (midpoint fa nil digits))))))))]
+    (if (or (and a (>= (compare a result) 0))
+            (and b (>= (compare result b) 0)))
+      (throw (ex-info "generate-key-between failed"
+                      {:a a
+                       :b b
+                       :between result}))
+      result)))
 
 (defn generate-n-keys-between
   [a b n & {:keys [digits]

@@ -17,7 +17,7 @@
 
   (are [x y]
        (= (index/generate-key-between nil x) y)
-    "cbx4" "c3wa"
+    "cbx4" "cbx3"
     "a0" "Zz"))
 
 (deftest generate-n-keys-between-test
@@ -30,26 +30,26 @@
     ["ZyB" "ZyE" "ZyL" "ZyP" "ZyS" "ZyZ" "Zyd" "Zyg" "Zyn" "Zyu" "Zz" "Zz8" "ZzG" "ZzV" "Zzl" "a0" "a0G" "a0V" "a1" "a2"]
 
     [nil "c0a3"]
-    ["aG"
-     "aH"
-     "aI"
-     "aJ"
-     "aK"
-     "aL"
-     "aM"
-     "aN"
-     "aO"
-     "aP"
-     "aQ"
-     "aR"
-     "aS"
-     "aT"
-     "aU"
-     "aV"
-     "aW"
-     "b0X"
-     "bY1"
-     "b2Z"]
+    ["c0Zj"
+     "c0Zk"
+     "c0Zl"
+     "c0Zm"
+     "c0Zn"
+     "c0Zo"
+     "c0Zp"
+     "c0Zq"
+     "c0Zr"
+     "c0Zs"
+     "c0Zt"
+     "c0Zu"
+     "c0Zv"
+     "c0Zw"
+     "c0Zx"
+     "c0Zy"
+     "c0Zz"
+     "c0a0"
+     "c0a1"
+     "c0a2"]
 
     ["c0a3" nil]
     ["c0a4"
