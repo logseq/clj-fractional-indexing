@@ -99,7 +99,7 @@
                                    [false (conj acc (nth digits d))]))))
                            [true []]
                            (reverse digs))
-        new-digs (reverse new-digs)]
+        new-digs (vec (reverse new-digs))]
     (if borrow
       (cond
         (= head \a) (str "Z" (last digits))
