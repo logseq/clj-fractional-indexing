@@ -13,7 +13,12 @@
   (are [x y]
        (= (index/generate-key-between x nil) y)
     "a0" "a1"
-    "rzzzzzzzzzzzzzzzzzz" "s0000000000000000000"))
+    "rzzzzzzzzzzzzzzzzzz" "s0000000000000000000")
+
+  (are [x y]
+       (= (index/generate-key-between nil x) y)
+    "cbx4" "c3wa"
+    "a0" "Zz"))
 
 (deftest generate-n-keys-between-test
   (are [x y]
@@ -114,8 +119,8 @@
   (test-generate-key-between "b125" "b129" "b127")
   (test-generate-key-between "a0" "a1V" "a1")
   (test-generate-key-between "Zz" "a01" "a0")
-  (test-generate-key-between nil "a0V" "a0")
-  (test-generate-key-between nil "b999" "b99")
+  (test-generate-key-between nil "a0V" "a0G")
+  (test-generate-key-between nil "b999" "b995")
   (test-generate-key-between nil "A00000000000000000000000000" "invalid order key: A00000000000000000000000000")
   (test-generate-key-between nil "A000000000000000000000000001" "A000000000000000000000000000V")
   (test-generate-key-between "zzzzzzzzzzzzzzzzzzzzzzzzzzy" nil "zzzzzzzzzzzzzzzzzzzzzzzzzzz")

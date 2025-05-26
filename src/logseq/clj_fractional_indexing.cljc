@@ -145,13 +145,11 @@
                      fb (str-slice b (count ib))]
                  (if (= ib (str "A" (apply str (repeat 26 (first digits)))))
                    (str ib (midpoint "" fb digits))
-                   (if (< (compare ib b) 0)
-                     ib
+                   (if (< (compare (str ib) b) 0)
+                     (str ib (midpoint "" fb digits))
                      (let [res (decrement-integer ib digits)]
                        (if (nil? res)
-                         (throw (ex-info "cannot decrement any more" {:a a
-                                                                      :b b
-                                                                      :ib ib}))
+                         (throw (ex-info "cannot decrement any more" {:a a :b b :ib ib}))
                          res))))))
     (nil? b) (let [ia (get-integer-part a)
                    fa (str-slice a (count ia))
